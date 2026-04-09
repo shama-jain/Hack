@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Crowd Safety Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Fonts: Space Grotesk for data feel, Syne for headers -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- ░░ LOADING SCREEN ░░ -->
+  <div id="loader" class="loader">
+    <div class="loader-inner">
+      <div class="loader-ring"></div>
+      <div class="loader-logo">
+        <span class="loader-icon">⬡</span>
+        <p class="loader-text">Initializing AI Core...</p>
+        <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░ MAIN APP ░░ -->
+  <div id="app" class="app hidden">
+
+    <!-- BACKGROUND GRID -->
+    <div class="bg-grid"></div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-mark">⬡</div>
+        <div class="header-titles">
+          <h1 class="header-title">AI Crowd Safety Dashboard</h1>
+          <p class="header-subtitle">AI Powered Monitoring System · v2.4.1</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="ai-pill">
+          <span class="ai-dot"></span>
+          <span class="ai-label">AI Processing...</span>
+        </div>
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span>LIVE</span>
+        </div>
+        <div class="header-time" id="headerTime">--:--:--</div>
+      </div>
+    </header>
+
+    <!-- ── ALERT BANNER ── -->
+    <div class="alert-banner" id="alertBanner">
+      <div class="alert-icon" id="alertIcon">◈</div>
+      <div class="alert-content">
+        <span class="alert-label" id="alertLabel">SYSTEM STATUS</span>
+        <span class="alert-message" id="alertMessage">All systems nominal. Monitoring active.</span>
+      </div>
+      <div class="alert-ticker" id="alertTicker">SAFE</div>
+    </div>
+
+    <!-- ── MAIN GRID ── -->
+    <main class="main-grid">
+
+      <!-- LEFT: VIDEO FEED -->
+      <section class="video-section">
+        <div class="section-header">
+          <span class="section-tag">FEED_01</span>
+          <h2 class="section-title">Live Surveillance Feed</h2>
+          <div class="feed-controls">
+            <button class="feed-btn active" title="Fullscreen">⤢</button>
+            <button class="feed-btn" title="Snapshot">⊡</button>
+          </div>
+        </div>
+
+        <div class="video-wrapper">
+          <!-- Scanline overlay -->
+          <div class="scanline"></div>
+          <!-- Corner brackets -->
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+
+          <!-- Video element — swap src to your downloaded crowd video -->
+          <video id="surveillanceVideo" autoplay muted loop playsinline>
+            <source src="video.mp4" type="video/mp4" />
+            <!-- Fallback canvas when no video -->
+          </video>
+
+          <!-- Fallback canvas shown when video is missing -->
+          <canvas id="fallbackCanvas" class="fallback-canvas"></canvas>
+
+          <!-- HUD overlays -->
+          <div class="video-hud">
+            <div class="hud-item hud-tl">
+              <span class="mono">CAM_04 · SECTOR_B</span>
+            </div>
+            <div class="hud-item hud-tr">
+              <span id="videoTime" class="mono">00:00:00</span>
+            </div>
+            <div class="hud-item hud-bl">
+              <span class="mono">REC ● 1080p · 30fps</span>
+            </div>
+            <div class="hud-item hud-br">
+              <span class="mono" id="densityOverlay">DENSITY: --</span>
+            </div>
+          </div>
+
+          <!-- Detection boxes (decorative AI sim) -->
+          <div class="detection-box db-1"></div>
+          <div class="detection-box db-2"></div>
+          <div class="detection-box db-3"></div>
+        </div>
+
+        <!-- Mini stats row under video -->
+        <div class="video-stats">
+          <div class="vstat">
+            <span class="vstat-label">FRAME RATE</span>
+            <span class="vstat-val mono">30 FPS</span>
+          </div>
+          <div class="vstat">
+            <span class="vstat-label">RESOLUTION</span>
+            <span class="vstat-val mono">1920×1080</span>
+          </div>
+          <div class="vstat">
+            <span class="vstat-label">UPTIME</span>
+            <span class="vstat-val mono" id="uptimeDisplay">00:00:00</span>
+          </div>
+          <div class="vstat">
+            <span class="vstat-label">DETECTIONS</span>
+            <span class="vstat-val mono" id="detectionCount">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: METRICS + CONTROLS -->
+      <aside class="right-panel">
+
+        <!-- METRIC CARDS -->
+        <div class="metrics-grid">
+
+          <!-- Card: Crowd Count -->
+          <div class="metric-card" id="cardCount">
+            <div class="card-glow"></div>
+            <div class="card-header">
+              <div class="card-icon">👥</div>
+              <div class="card-badge" id="countBadge">SAFE</div>
+            </div>
+            <div class="card-value" id="crowdCountDisplay">0</div>
+            <div class="card-label">Crowd Count</div>
+            <div class="card-sub">Live person detection via CV</div>
+            <div class="card-bar-wrap">
+              <div class="card-bar" id="crowdBar"></div>
+            </div>
+          </div>
+
+          <!-- Card: Risk Level -->
+          <div class="metric-card" id="cardRisk">
+            <div class="card-glow"></div>
+            <div class="card-header">
+              <div class="card-icon">⚠︎</div>
+              <div class="card-badge" id="riskBadge">LOW</div>
+            </div>
+            <div class="card-value risk-value" id="riskLevelDisplay">LOW</div>
+            <div class="card-label">Risk Level</div>
+            <div class="card-sub">Panic probability index</div>
+            <div class="risk-dots" id="riskDots">
+              <span class="rdot active"></span>
+              <span class="rdot"></span>
+              <span class="rdot"></span>
+              <span class="rdot"></span>
+              <span class="rdot"></span>
+            </div>
+          </div>
+
+          <!-- Card: System Status -->
+          <div class="metric-card" id="cardStatus">
+            <div class="card-glow"></div>
+            <div class="card-header">
+              <div class="card-icon">🛡</div>
+              <div class="card-badge safe-badge">ONLINE</div>
+            </div>
+            <div class="card-value" id="systemStatusDisplay">NORMAL</div>
+            <div class="card-label">System Status</div>
+            <div class="card-sub">Neural engine · active</div>
+            <div class="sys-indicators">
+              <div class="sys-ind"><span class="ind-dot green"></span><span>Vision AI</span></div>
+              <div class="sys-ind"><span class="ind-dot green"></span><span>Alert Net</span></div>
+              <div class="sys-ind"><span class="ind-dot green" id="camDot"></span><span>Camera</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CONTROL PANEL -->
+        <div class="control-panel">
+          <div class="section-header">
+            <span class="section-tag">CONTROLS</span>
+            <h2 class="section-title">System Controls</h2>
+          </div>
+          <div class="control-btns">
+            <button class="btn-emergency" id="btnEmergency" onclick="triggerEmergency()">
+              <span class="btn-icon">🚨</span>
+              <span class="btn-text">Emergency Mode</span>
+              <span class="btn-ripple"></span>
+            </button>
+            <button class="btn-reset" id="btnReset" onclick="resetSystem()">
+              <span class="btn-icon">↺</span>
+              <span class="btn-text">Reset System</span>
+            </button>
+          </div>
+          <div class="control-sliders">
+            <label class="ctrl-label">Simulation Speed
+              <input type="range" id="simSpeed" min="500" max="3000" value="1500" class="ctrl-range" />
+            </label>
+            <label class="ctrl-label">Detection Sensitivity
+              <input type="range" id="sensitivity" min="1" max="10" value="7" class="ctrl-range" />
+            </label>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+
+    <!-- ── CHART SECTION ── -->
+    <section class="chart-section">
+      <div class="section-header">
+        <span class="section-tag">ANALYTICS</span>
+        <h2 class="section-title">Crowd Density Over Time</h2>
+        <div class="chart-legend">
+          <span class="leg-item"><span class="leg-dot safe-dot"></span>Safe</span>
+          <span class="leg-item"><span class="leg-dot warn-dot"></span>Warning</span>
+          <span class="leg-item"><span class="leg-dot danger-dot"></span>Danger</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="densityChart"></canvas>
+      </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="footer">
+      <span>⬡ Built for <strong>Hackathon Demo</strong> · AI Crowd Safety System</span>
+      <span class="footer-right">Powered by Computer Vision · Neural Analytics · Real-time Alerting</span>
+    </footer>
+
+  </div><!-- /app -->
+
+  <script src="script.js"></script>
+</body>
+</html>
